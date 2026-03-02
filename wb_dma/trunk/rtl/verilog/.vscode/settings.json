@@ -1,0 +1,6 @@
+{
+    "digital-ide.verilog.includePaths": [
+        "."  // 这表示当前工作区根目录
+        // 如果你的文件在子目录，例如 `include`，则可以添加 "./include"
+    ]
+}
