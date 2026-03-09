@@ -230,14 +230,15 @@ assign ch_enable	= CH_EN ? (ch_csr_r[`WDMA_CH_EN] & (HAVE_CBUF ? !ch_dis : 1'b1)
 
 parameter	[4:0]	CH_ADR = CH_NO + 5'h1;
 
-assign ch_csr_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h0);
-assign ch_csr_re	= CH_EN & wb_rf_re & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h0);
-assign ch_txsz_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h1);
-assign ch_adr0_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h2);
-assign ch_am0_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h3);
-assign ch_adr1_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h4);
-assign ch_am1_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h5);
-assign pointer_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h6);
+//地址映射
+assign ch_csr_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h0);			//CH0_CSR		8'h20
+assign ch_csr_re	= CH_EN & wb_rf_re & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h0);			
+assign ch_txsz_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h1);			//CH0_TXSZ		8'h24
+assign ch_adr0_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h2);			//CH0_ADR0		8'h28
+assign ch_am0_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h3);			//CH0_AM0		8'h2c
+assign ch_adr1_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h4);			//CH0_ADR1		8'h30
+assign ch_am1_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h5);			//CH0_AM1		8'h34
+assign pointer_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h6);			//CH0_PTR		8'h38，CPU写入的配置信息，初次需要CPU启动，所以为CPU写入的wb_rf_din。之后链表跑起来后从链表加载，变成了de_csr
 assign sw_pointer_we	= CH_EN & wb_rf_we & (wb_rf_adr[7:3] == CH_ADR) & (wb_rf_adr[2:0] == 3'h7);
 
 assign ch_done_we	= CH_EN & (((ch_sel==CH_NO) & dma_done_all) | ndnr) &

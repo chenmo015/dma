@@ -1,0 +1,5 @@
+${WORK_DIR}/bench/verilog/wb_mast_model.v
+${WORK_DIR}/bench/verilog/test_bench_top.v
+
+${WORK_DIR}/bench/verilog/wb_model_defines.v
+${WORK_DIR}/bench/verilog/wb_slv_model.v

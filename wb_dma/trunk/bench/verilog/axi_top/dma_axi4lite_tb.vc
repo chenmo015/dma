@@ -1,0 +1,3 @@
+${WORK_DIR}/bench/verilog/axi_top/test_axi_tb.v
+${WORK_DIR}/bench/verilog/axi_models/axi_lite_mast_model.v
+${WORK_DIR}/bench/verilog/axi_models/axi_lite_mem_model.v

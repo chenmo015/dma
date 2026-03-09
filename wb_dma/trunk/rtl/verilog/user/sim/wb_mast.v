@@ -64,6 +64,7 @@
 //
 //
 
+/////////////////////////////////////////主机仿真模型
 `include "wb_model_defines.v"
 
 module wb_mast(clk, rst, adr, din, dout, cyc, stb, sel, we, ack, err, rty);
@@ -118,18 +119,18 @@ initial
 
 
 
-task mem_fill;
+task mem_fill;						//用随机数填充读写内存，读写内存是用来保存从外设读出的数据和要写入外设的数据的，读写内存的大小由参数mem_size决定
 
-integer n;
-begin
-rd_cnt = 0;
-wr_cnt = 0;
-for(n=0;n<mem_size;n=n+1)
-   begin
-	rd_mem[n] = $random;
-	wr_mem[n] = $random;
-   end
-end
+	integer n;
+	begin
+	rd_cnt = 0;
+	wr_cnt = 0;
+	for(n=0;n<mem_size;n=n+1)
+	   begin
+		rd_mem[n] = $random;
+		wr_mem[n] = $random;
+	   end
+	end
 endtask
 
 ////////////////////////////////////////////////////////////////////
@@ -138,34 +139,34 @@ endtask
 //
 
 task wb_wr1;							//用主机（CPU）向外设写数据，如果是DMA模式，就向DMA里的寄存器写入数据，如果是桥接模式，就直连到另一条总线，向另一条总线的slave写入数据
-input	[31:0]	a;
-input	[3:0]	s;
-input	[31:0]	d;
+	input	[31:0]	a;	//addr
+	input	[3:0]	s;	//sel
+	input	[31:0]	d;	//data
 
-begin
+	begin
 
-@(posedge clk);
-#1;
-adr = a;
-dout = d;
-cyc = 1;
-stb = 1;
-we=1;
-sel = s;
+	@(posedge clk);
+	#1;
+	adr = a;
+	dout = d;
+	cyc = 1;
+	stb = 1;
+	we=1;
+	sel = s;
 
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-#1;
-cyc=0;
-stb=0;
-adr = 32'hxxxx_xxxx;
-//adr = 32'hffff_ffff;
-//adr = 0;
-dout = 32'hxxxx_xxxx;
-we = 1'hx;
-sel = 4'hx;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	#1;
+	cyc=0;
+	stb=0;
+	adr = 32'hxxxx_xxxx;
+	//adr = 32'hffff_ffff;
+	//adr = 0;
+	dout = 32'hxxxx_xxxx;
+	we = 1'hx;
+	sel = 4'hx;
 
-end
+	end
 endtask
 
 ////////////////////////////////////////////////////////////////////
@@ -173,327 +174,327 @@ endtask
 // Write 4 Words Task
 //
 
-task wb_wr4;
-input	[31:0]	a;
-input	[3:0]	s;
-input		delay;
-input	[31:0]	d1;
-input	[31:0]	d2;
-input	[31:0]	d3;
-input	[31:0]	d4;
+task wb_wr4;					//和wb_wr1类似，不过是连续写入4个数据，地址自动加4，适合于burst传输
+	input	[31:0]	a;
+	input	[3:0]	s;
+	input		delay;
+	input	[31:0]	d1;
+	input	[31:0]	d2;
+	input	[31:0]	d3;
+	input	[31:0]	d4;
 
-integer		delay;
+	integer		delay;
 
-begin
+	begin
 
-@(posedge clk);
-#1;
-cyc = 1;
-sel = s;
-
-repeat(delay)
-   begin
 	@(posedge clk);
 	#1;
-   end
-adr = a;
-dout = d1;
-stb = 1;
-we=1;
-while(~ack & ~err)	@(posedge clk);
-#2;
-stb=0;
-we=1'bx;
-dout = 32'hxxxx_xxxx;
+	cyc = 1;
+	sel = s;
 
-
-repeat(delay)
-   begin
-	@(posedge clk);
-	#1;
-   end
-stb=1;
-adr = a+4;
-dout = d2;
-we=1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-#2;
-stb=0;
-we=1'bx;
-dout = 32'hxxxx_xxxx;
-
-repeat(delay)
-   begin
-	@(posedge clk);
-	#1;
-   end
-stb=1;
-adr = a+8;
-dout = d3;
-we=1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-#2;
-stb=0;
-we=1'bx;
-dout = 32'hxxxx_xxxx;
-
-repeat(delay)
-   begin
-	@(posedge clk);
-	#1;
-   end
-stb=1;
-adr = a+12;
-dout = d4;
-we=1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-#1;
-stb=0;
-cyc=0;
-
-adr = 32'hxxxx_xxxx;
-//adr = 0;
-//adr = 32'hffff_ffff;
-dout = 32'hxxxx_xxxx;
-we = 1'hx;
-sel = 4'hx;
-
-end
-endtask
-
-
-task wb_wr_mult;
-input	[31:0]	a;
-input	[3:0]	s;
-input		delay;
-input		count;
-
-integer		delay;
-integer		count;
-integer		n;
-
-begin
-
-@(posedge clk);
-#1;
-cyc = 1;
-
-for(n=0;n<count;n=n+1)
-   begin
 	repeat(delay)
 	   begin
 		@(posedge clk);
 		#1;
 	   end
-	adr = a + (n*4);
-	dout = wr_mem[n + wr_cnt];
+	adr = a;
+	dout = d1;
 	stb = 1;
 	we=1;
-	sel = s;
-	if(n!=0)	@(posedge clk);
 	while(~ack & ~err)	@(posedge clk);
 	#2;
 	stb=0;
 	we=1'bx;
-	sel = 4'hx;
 	dout = 32'hxxxx_xxxx;
+
+
+	repeat(delay)
+	   begin
+		@(posedge clk);
+		#1;
+	   end
+	stb=1;
+	adr = a+4;
+	dout = d2;
+	we=1;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	#2;
+	stb=0;
+	we=1'bx;
+	dout = 32'hxxxx_xxxx;
+
+	repeat(delay)
+	   begin
+		@(posedge clk);
+		#1;
+	   end
+	stb=1;
+	adr = a+8;
+	dout = d3;
+	we=1;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	#2;
+	stb=0;
+	we=1'bx;
+	dout = 32'hxxxx_xxxx;
+
+	repeat(delay)
+	   begin
+		@(posedge clk);
+		#1;
+	   end
+	stb=1;
+	adr = a+12;
+	dout = d4;
+	we=1;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	#1;
+	stb=0;
+	cyc=0;
+
 	adr = 32'hxxxx_xxxx;
-   end
+	//adr = 0;
+	//adr = 32'hffff_ffff;
+	dout = 32'hxxxx_xxxx;
+	we = 1'hx;
+	sel = 4'hx;
 
-cyc=0;
-
-adr = 32'hxxxx_xxxx;
-//adr = 32'hffff_ffff;
-
-wr_cnt = wr_cnt + count;
-end
+	end
 endtask
 
 
-task wb_rmw;
-input	[31:0]	a;
-input	[3:0]	s;
-input		delay;
-input		rcount;
-input		wcount;
+task wb_wr_mult;					//和wb_wr4类似，不过是连续写入count个数据，地址自动加4，适合于burst传输
+	input	[31:0]	a;
+	input	[3:0]	s;
+	input		delay;					//每写入一个数据的延迟周期数，适合于测试总线上的等待状态
+	input		count;					//要写入的数据个数
 
-integer		delay;
-integer		rcount;
-integer		wcount;
-integer		n;
+	integer		delay;
+	integer		count;
+	integer		n;
 
-begin
+	begin
 
-@(posedge clk);
-#1;
-cyc = 1;
-we = 0;
-sel = s;
-repeat(delay)	@(posedge clk);
+	@(posedge clk);
+	#1;
+	cyc = 1;
 
-for(n=0;n<rcount-1;n=n+1)
-   begin
-	adr = a + (n*4);
+	for(n=0;n<count;n=n+1)
+	   begin
+		repeat(delay)
+		   begin
+			@(posedge clk);
+			#1;
+		   end
+		adr = a + (n*4);
+		dout = wr_mem[n + wr_cnt];
+		stb = 1;
+		we=1;
+		sel = s;
+		if(n!=0)	@(posedge clk);
+		while(~ack & ~err)	@(posedge clk);
+		#2;
+		stb=0;
+		we=1'bx;
+		sel = 4'hx;
+		dout = 32'hxxxx_xxxx;
+		adr = 32'hxxxx_xxxx;
+	   end
+
+	cyc=0;
+
+	adr = 32'hxxxx_xxxx;
+	//adr = 32'hffff_ffff;
+
+	wr_cnt = wr_cnt + count;
+	end
+endtask
+
+
+task wb_rmw;						//读-改-写任务，先读出数据，根据sel信号修改数据的某些字节，然后再写回去，适合于测试总线上的读-改-写操作
+	input	[31:0]	a;
+	input	[3:0]	s;
+	input		delay;
+	input		rcount;
+	input		wcount;
+
+	integer		delay;
+	integer		rcount;
+	integer		wcount;
+	integer		n;
+
+	begin
+
+	@(posedge clk);
+	#1;
+	cyc = 1;
+	we = 0;
+	sel = s;
+	repeat(delay)	@(posedge clk);
+
+	for(n=0;n<rcount-1;n=n+1)
+	   begin
+		adr = a + (n*4);
+		stb = 1;
+		while(~ack & ~err)	@(posedge clk);
+		rd_mem[n + rd_cnt] = din;
+		//$display("Rd Mem[%0d]: %h", (n + rd_cnt), rd_mem[n + rd_cnt] );
+		#2;
+		stb=0;
+		we = 1'hx;
+		sel = 4'hx;
+		adr = 32'hxxxx_xxxx;
+		repeat(delay)
+		   begin
+			@(posedge clk);
+			#1;
+		   end
+		we = 0;
+		sel = s;
+	   end
+
+	adr = a+(n*4);
 	stb = 1;
+	@(posedge clk);
 	while(~ack & ~err)	@(posedge clk);
 	rd_mem[n + rd_cnt] = din;
 	//$display("Rd Mem[%0d]: %h", (n + rd_cnt), rd_mem[n + rd_cnt] );
-	#2;
+	#1;
 	stb=0;
 	we = 1'hx;
 	sel = 4'hx;
 	adr = 32'hxxxx_xxxx;
-	repeat(delay)
+
+	rd_cnt = rd_cnt + rcount;
+
+	//@(posedge clk);
+
+
+	for(n=0;n<wcount;n=n+1)
 	   begin
-		@(posedge clk);
-		#1;
+		repeat(delay)
+		   begin
+			@(posedge clk);
+			#1;
+		   end
+		adr = a + (n*4);
+		dout = wr_mem[n + wr_cnt];
+		stb = 1;
+		we=1;
+		sel = s;
+	//	if(n!=0)
+			@(posedge clk);
+		while(~ack & ~err)	@(posedge clk);
+		#2;
+		stb=0;
+		we=1'bx;
+		sel = 4'hx;
+		dout = 32'hxxxx_xxxx;
+		adr = 32'hxxxx_xxxx;
 	   end
-	we = 0;
-	sel = s;
-   end
 
-adr = a+(n*4);
-stb = 1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-rd_mem[n + rd_cnt] = din;
-//$display("Rd Mem[%0d]: %h", (n + rd_cnt), rd_mem[n + rd_cnt] );
-#1;
-stb=0;
-we = 1'hx;
-sel = 4'hx;
-adr = 32'hxxxx_xxxx;
+	cyc=0;
 
-rd_cnt = rd_cnt + rcount;
-
-//@(posedge clk);
-
-
-for(n=0;n<wcount;n=n+1)
-   begin
-	repeat(delay)
-	   begin
-		@(posedge clk);
-		#1;
-	   end
-	adr = a + (n*4);
-	dout = wr_mem[n + wr_cnt];
-	stb = 1;
-	we=1;
-	sel = s;
-//	if(n!=0)
-		@(posedge clk);
-	while(~ack & ~err)	@(posedge clk);
-	#2;
-	stb=0;
-	we=1'bx;
-	sel = 4'hx;
-	dout = 32'hxxxx_xxxx;
 	adr = 32'hxxxx_xxxx;
-   end
+	//adr = 32'hffff_ffff;
 
-cyc=0;
-
-adr = 32'hxxxx_xxxx;
-//adr = 32'hffff_ffff;
-
-wr_cnt = wr_cnt + wcount;
-end
+	wr_cnt = wr_cnt + wcount;
+	end
 endtask
 
 
 
 
-task wb_wmr;
-input	[31:0]	a;
-input	[3:0]	s;
-input		delay;
-input		rcount;
-input		wcount;
+task wb_wmr;					//和wb_rmw类似，不过是先写入数据，然后再读出数据，适合于测试总线上的写-读操作
+	input	[31:0]	a;
+	input	[3:0]	s;
+	input		delay;
+	input		rcount;
+	input		wcount;
 
-integer		delay;
-integer		rcount;
-integer		wcount;
-integer		n;
+	integer		delay;
+	integer		rcount;
+	integer		wcount;
+	integer		n;
 
-begin
+	begin
 
-@(posedge clk);
-#1;
-cyc = 1;
-we = 1'bx;
-sel = 4'hx;
-sel = s;
-
-for(n=0;n<wcount;n=n+1)
-   begin
-	repeat(delay)
-	   begin
-		@(posedge clk);
-		#1;
-	   end
-	adr = a + (n*4);
-	dout = wr_mem[n + wr_cnt];
-	stb = 1;
-	we=1;
+	@(posedge clk);
+	#1;
+	cyc = 1;
+	we = 1'bx;
+	sel = 4'hx;
 	sel = s;
+
+	for(n=0;n<wcount;n=n+1)
+	   begin
+		repeat(delay)
+		   begin
+			@(posedge clk);
+			#1;
+		   end
+		adr = a + (n*4);
+		dout = wr_mem[n + wr_cnt];
+		stb = 1;
+		we=1;
+		sel = s;
+		@(posedge clk);
+		while(~ack & ~err)	@(posedge clk);
+		#2;
+		stb=0;
+		we=1'bx;
+		sel = 4'hx;
+		dout = 32'hxxxx_xxxx;
+		adr = 32'hxxxx_xxxx;
+	   end
+
+	wr_cnt = wr_cnt + wcount;
+	stb=0;
+	repeat(delay)	@(posedge clk);
+	#1;
+
+	sel = s;
+	we = 0;
+	for(n=0;n<rcount-1;n=n+1)
+	   begin
+		adr = a + (n*4);
+		stb = 1;
+		while(~ack & ~err)	@(posedge clk);
+		rd_mem[n + rd_cnt] = din;
+		//$display("Rd Mem[%0d]: %h", (n + rd_cnt), rd_mem[n + rd_cnt] );
+		#2;
+		stb=0;
+		we = 1'hx;
+		sel = 4'hx;
+		adr = 32'hxxxx_xxxx;
+		repeat(delay)
+		   begin
+			@(posedge clk);
+			#1;
+		   end
+		we = 0;
+		sel = s;
+	   end
+
+	adr = a+(n*4);
+	stb = 1;
 	@(posedge clk);
 	while(~ack & ~err)	@(posedge clk);
-	#2;
-	stb=0;
-	we=1'bx;
-	sel = 4'hx;
-	dout = 32'hxxxx_xxxx;
-	adr = 32'hxxxx_xxxx;
-   end
-
-wr_cnt = wr_cnt + wcount;
-stb=0;
-repeat(delay)	@(posedge clk);
-#1;
-
-sel = s;
-we = 0;
-for(n=0;n<rcount-1;n=n+1)
-   begin
-	adr = a + (n*4);
-	stb = 1;
-	while(~ack & ~err)	@(posedge clk);
 	rd_mem[n + rd_cnt] = din;
+	rd_cnt = rd_cnt + rcount;
 	//$display("Rd Mem[%0d]: %h", (n + rd_cnt), rd_mem[n + rd_cnt] );
-	#2;
-	stb=0;
-	we = 1'hx;
+	#1;
+
+	cyc = 0;
+	stb = 0;
+	we  = 1'hx;
 	sel = 4'hx;
 	adr = 32'hxxxx_xxxx;
-	repeat(delay)
-	   begin
-		@(posedge clk);
-		#1;
-	   end
-	we = 0;
-	sel = s;
-   end
 
-adr = a+(n*4);
-stb = 1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-rd_mem[n + rd_cnt] = din;
-rd_cnt = rd_cnt + rcount;
-//$display("Rd Mem[%0d]: %h", (n + rd_cnt), rd_mem[n + rd_cnt] );
-#1;
-
-cyc = 0;
-stb = 0;
-we  = 1'hx;
-sel = 4'hx;
-adr = 32'hxxxx_xxxx;
-
-end
+	end
 endtask
 
 
@@ -504,35 +505,35 @@ endtask
 // Read 1 Word Task
 //
 
-task wb_rd1;									//读出数据，如果工作在DMA模式下会读出DMA内的寄存器，如果工作在桥接模式下就相对于直接接到了另一条总线的slave上，可以直接读取slave内的数据
-input	[31:0]	a;
-input	[3:0]	s;
-output	[31:0]	d;
+task wb_rd1;					//读出数据，如果工作在DMA模式下会读出DMA内的寄存器，如果工作在桥接模式下就相对于直接接到了另一条总线的slave上，可以直接读取slave内的数据
+	input	[31:0]	a;
+	input	[3:0]	s;
+	output	[31:0]	d;
 
-begin
+	begin
 
-@(posedge clk);
-#1;
-adr = a;
-cyc = 1;
-stb = 1;
-we  = 0;
-sel = s;
+	@(posedge clk);
+	#1;
+	adr = a;
+	cyc = 1;
+	stb = 1;
+	we  = 0;
+	sel = s;
 
-//@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-d = din;
-#1;
-cyc=0;
-stb=0;
-//adr = 32'hxxxx_xxxx;
-//adr = 0;
-adr = 32'hffff_ffff;
-dout = 32'hxxxx_xxxx;
-we = 1'hx;
-sel = 4'hx;
+	//@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	d = din;
+	#1;
+	cyc=0;
+	stb=0;
+	//adr = 32'hxxxx_xxxx;
+	//adr = 0;
+	adr = 32'hffff_ffff;
+	dout = 32'hxxxx_xxxx;
+	we = 1'hx;
+	sel = 4'hx;
 
-end
+	end
 endtask
 
 
@@ -542,122 +543,33 @@ endtask
 //
 
 
-task wb_rd4;
-input	[31:0]	a;
-input	[3:0]	s;
-input		delay;
-output	[31:0]	d1;
-output	[31:0]	d2;
-output	[31:0]	d3;
-output	[31:0]	d4;
+task wb_rd4;				//连续读出4个数据，地址自动加4，适合于burst传输
+	input	[31:0]	a;
+	input	[3:0]	s;
+	input		delay;
+	output	[31:0]	d1;
+	output	[31:0]	d2;
+	output	[31:0]	d3;
+	output	[31:0]	d4;
 
-integer		delay;
-begin
+	integer		delay;
+	begin
 
-@(posedge clk);
-#1;
-cyc = 1;
-we = 0;
-sel = s;
-repeat(delay)	@(posedge clk);
-
-adr = a;
-stb = 1;
-while(~ack & ~err)	@(posedge clk);
-d1 = din;
-#2;
-stb=0;
-we = 1'hx;
-sel = 4'hx;
-repeat(delay)
-   begin
 	@(posedge clk);
 	#1;
-   end
-we = 0;
-sel = s;
+	cyc = 1;
+	we = 0;
+	sel = s;
+	repeat(delay)	@(posedge clk);
 
-adr = a+4;
-stb = 1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-d2 = din;
-#2;
-stb=0;
-we = 1'hx;
-sel = 4'hx;
-repeat(delay)
-   begin
-	@(posedge clk);
-	#1;
-   end
-we = 0;
-sel = s;
-
-
-adr = a+8;
-stb = 1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-d3 = din;
-#2;
-stb=0;
-we = 1'hx;
-sel = 4'hx;
-repeat(delay)
-   begin
-	@(posedge clk);
-	#1;
-   end
-we = 0;
-sel = s;
-
-adr = a+12;
-stb = 1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-d4 = din;
-#1;
-stb=0;
-cyc=0;
-we = 1'hx;
-sel = 4'hx;
-adr = 32'hffff_ffff;
-end
-endtask
-
-
-
-task wb_rd_mult;
-input	[31:0]	a;
-input	[3:0]	s;
-input		delay;
-input		count;
-
-integer		delay;
-integer		count;
-integer		n;
-
-begin
-
-@(posedge clk);
-#1;
-cyc = 1;
-we = 0;
-sel = s;
-repeat(delay)	@(posedge clk);
-
-for(n=0;n<count-1;n=n+1)
-   begin
-	adr = a + (n*4);
+	adr = a;
 	stb = 1;
 	while(~ack & ~err)	@(posedge clk);
-	rd_mem[n + rd_cnt] = din;
+	d1 = din;
 	#2;
 	stb=0;
 	we = 1'hx;
 	sel = 4'hx;
-	adr = 32'hxxxx_xxxx;
 	repeat(delay)
 	   begin
 		@(posedge clk);
@@ -665,23 +577,112 @@ for(n=0;n<count-1;n=n+1)
 	   end
 	we = 0;
 	sel = s;
-   end
 
-adr = a+(n*4);
-stb = 1;
-@(posedge clk);
-while(~ack & ~err)	@(posedge clk);
-rd_mem[n + rd_cnt] = din;
-#1;
-stb=0;
-cyc=0;
-we = 1'hx;
-sel = 4'hx;
-adr = 32'hffff_ffff;
-adr = 32'hxxxx_xxxx;
+	adr = a+4;
+	stb = 1;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	d2 = din;
+	#2;
+	stb=0;
+	we = 1'hx;
+	sel = 4'hx;
+	repeat(delay)
+	   begin
+		@(posedge clk);
+		#1;
+	   end
+	we = 0;
+	sel = s;
 
-rd_cnt = rd_cnt + count;
-end
+
+	adr = a+8;
+	stb = 1;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	d3 = din;
+	#2;
+	stb=0;
+	we = 1'hx;
+	sel = 4'hx;
+	repeat(delay)
+	   begin
+		@(posedge clk);
+		#1;
+	   end
+	we = 0;
+	sel = s;
+
+	adr = a+12;
+	stb = 1;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	d4 = din;
+	#1;
+	stb=0;
+	cyc=0;
+	we = 1'hx;
+	sel = 4'hx;
+	adr = 32'hffff_ffff;
+	end
+endtask
+
+
+
+task wb_rd_mult;			//连续读出count个数据，地址自动加4，适合于burst传输
+	input	[31:0]	a;
+	input	[3:0]	s;
+	input		delay;
+	input		count;
+
+	integer		delay;
+	integer		count;
+	integer		n;
+
+	begin
+
+	@(posedge clk);
+	#1;
+	cyc = 1;
+	we = 0;
+	sel = s;
+	repeat(delay)	@(posedge clk);
+
+	for(n=0;n<count-1;n=n+1)
+	   begin
+		adr = a + (n*4);
+		stb = 1;
+		while(~ack & ~err)	@(posedge clk);
+		rd_mem[n + rd_cnt] = din;
+		#2;
+		stb=0;
+		we = 1'hx;
+		sel = 4'hx;
+		adr = 32'hxxxx_xxxx;
+		repeat(delay)
+		   begin
+			@(posedge clk);
+			#1;
+		   end
+		we = 0;
+		sel = s;
+	   end
+
+	adr = a+(n*4);
+	stb = 1;
+	@(posedge clk);
+	while(~ack & ~err)	@(posedge clk);
+	rd_mem[n + rd_cnt] = din;
+	#1;
+	stb=0;
+	cyc=0;
+	we = 1'hx;
+	sel = 4'hx;
+	adr = 32'hffff_ffff;
+	adr = 32'hxxxx_xxxx;
+
+	rd_cnt = rd_cnt + count;
+	end
 endtask
 
 endmodule

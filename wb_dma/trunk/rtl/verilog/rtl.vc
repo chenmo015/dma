@@ -1,0 +1,13 @@
+${WORK_DIR}/rtl/verilog/wb_dma_ch_arb.v
+${WORK_DIR}/rtl/verilog/wb_dma_ch_pri_enc.v
+${WORK_DIR}/rtl/verilog/wb_dma_ch_rf.v
+${WORK_DIR}/rtl/verilog/wb_dma_ch_sel.v
+${WORK_DIR}/rtl/verilog/wb_dma_de.v
+${WORK_DIR}/rtl/verilog/wb_dma_defines.v
+${WORK_DIR}/rtl/verilog/wb_dma_inc30r.v
+${WORK_DIR}/rtl/verilog/wb_dma_pri_enc_sub.v
+${WORK_DIR}/rtl/verilog/wb_dma_rf.v
+${WORK_DIR}/rtl/verilog/wb_dma_top.v
+${WORK_DIR}/rtl/verilog/wb_dma_wb_if.v
+${WORK_DIR}/rtl/verilog/wb_dma_wb_mast.v
+${WORK_DIR}/rtl/verilog/wb_dma_wb_slv.v

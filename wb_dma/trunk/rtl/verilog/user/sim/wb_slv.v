@@ -87,7 +87,7 @@ reg	[31:0]	dout, tmp2;
 
 reg		err, rty;
 reg	[31:0]	del_ack;
-reg	[5:0]	delay;
+reg	[5:0]	delay;				//从设备延迟，也就是什么时候产生ack，DMA在等待ack的过程中是一直在等的，所以这个delay是从设备响应的延迟，而不是DMA发出请求到从设备收到请求的延迟
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -138,21 +138,21 @@ always @(posedge clk)
 assign	#3 ack = cyc & ((delay==0) ? (mem_re | mem_we) : del_ack[delay-1]);
 
 task fill_mem;											//往slave的mem里初始化数据
-input		mode;										//两种模式：0有规律，1纯随机
+	input		mode;										//两种模式：0有规律，1纯随机
 
-integer		n, mode;
+	integer		n, mode;
 
-begin
+	begin
 
-for(n=0;n<(sz+1);n=n+1)
-   begin
-	case(mode)
-	   0:	mem[n] = { ~n[15:0], n[15:0] };
-	   1:	mem[n] = $random;
-	endcase
-   end
+	for(n=0;n<(sz+1);n=n+1)
+	   begin
+		case(mode)
+		   0:	mem[n] = { ~n[15:0], n[15:0] };
+		   1:	mem[n] = $random;
+		endcase
+	   end
 
-end
+	end
 endtask
 
 endmodule

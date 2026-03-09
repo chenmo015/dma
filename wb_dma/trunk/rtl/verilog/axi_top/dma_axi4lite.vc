@@ -1,0 +1,5 @@
+-f ${WORK_DIR}/rtl/verilog/rtl.vc
+${WORK_DIR}/rtl/verilog/axi2wb_bridge/axi4lite_slave_to_wb_master.v
+${WORK_DIR}/rtl/verilog/axi2wb_bridge/wb_master_to_axi4lite_master.v
+${WORK_DIR}/rtl/verilog/axi_top/wb_dma_top_axi.v
+
